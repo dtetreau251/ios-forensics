@@ -169,6 +169,25 @@ def add_1_to_phone_numbers_with_10_digits(df):
     return df
 
 
+def remove_whitespace_from_phone_numbers(df):
+    # remove whitespace from phone numbers
+    df["Phone1"] = df["Phone1"].apply(lambda x: x.replace(" ", ""))
+    df["Phone2"] = df["Phone2"].apply(lambda x: x.replace(" ", ""))
+    df["Phone3"] = df["Phone3"].apply(lambda x: x.replace(" ", ""))
+    return df
+
+
+def drop_rows_with_phone_numbers_that_are_less_than_10_digits(df):
+    # drop rows where the Phone1, Phone2, and Phone3 columns have less than 10 digits
+
+    df = df[
+        (df["Phone1"].str.len() >= 10)
+        | (df["Phone2"].str.len() >= 10)
+        | (df["Phone3"].str.len() >= 10)
+    ]
+    return df
+
+
 def convert_none_values_in_name_columns_to_empty_string(df):
     # convert None values in the Prefix, First, Middle, Last, and Suffix columns to empty strings
     df["Prefix"] = df["Prefix"].apply(lambda x: "" if x is None else x)
@@ -238,15 +257,21 @@ def order_columns(df):
     return df
 
 
-def sort_by_name(df):
-    # sort the dataframe by name
-    df = df.sort_values(by=["Name"])
+def remove_leading_spaces_from_name_column(df):
+    # remove leading spaces from all values in the Name column
+    df["Name"] = df["Name"].apply(lambda x: x.lstrip())
     return df
 
 
 def rename_job_title_column(df):
     # rename the JobTitle column to Job Title
     df = df.rename(columns={"JobTitle": "Title"})
+    return df
+
+
+def remove_rows_with_names_that_start_with_a_number(df):
+    # remove rows where the Name column starts with a number
+    df = df[~df["Name"].str.contains("^\d", regex=True)]
     return df
 
 
@@ -259,6 +284,12 @@ def rename_birthday_column_to_dob(df):
 def drop_rows_with_empty_string_in_name_column(df):
     # drop rows where the Name column is empty
     df = df[df["Name"] != ""]
+    return df
+
+
+def sort_by_name(df):
+    # sort the dataframe by name
+    df = df.sort_values(by=["Name"])
     return df
 
 
@@ -296,6 +327,8 @@ def main():
     df = drop_value_column(df)
     df = add_area_code_to_7_digit_phone_numbers(df)
     df = add_1_to_phone_numbers_with_10_digits(df)
+    df = remove_whitespace_from_phone_numbers(df)
+    df = drop_rows_with_phone_numbers_that_are_less_than_10_digits(df)
     df = convert_none_values_in_name_columns_to_empty_string(df)
     df = combine_name_columns_and_add_space(df)
     df = drop_unused_name_columns(df)
@@ -303,10 +336,12 @@ def main():
     df = covert_birthday_to_float(df)
     df = convert_birthday_to_date(df)
     df = order_columns(df)
-    df = sort_by_name(df)
     df = rename_job_title_column(df)
+    df = remove_leading_spaces_from_name_column(df)
+    df = remove_rows_with_names_that_start_with_a_number(df)
     df = rename_birthday_column_to_dob(df)
     df = drop_rows_with_empty_string_in_name_column(df)
+    df = sort_by_name(df)
     print(df)
     export_to_excel(df)
     export_to_csv(df)
