@@ -198,6 +198,30 @@ def convert_none_values_in_name_columns_to_empty_string(df):
     return df
 
 
+def remove_emojis_from_name_columns(df):
+    # remove emojis from the First, Middle, and Last columns
+    df["First"] = df["First"].apply(lambda x: x.encode("ascii", "ignore").decode())
+    df["Middle"] = df["Middle"].apply(lambda x: x.encode("ascii", "ignore").decode())
+    df["Last"] = df["Last"].apply(lambda x: x.encode("ascii", "ignore").decode())
+    return df
+
+
+def remove_whitespace_from_the_front_and_back_of_name_columns(df):
+    # remove whitespace from the front and back of the First, Middle, and Last columns
+    df["First"] = df["First"].apply(lambda x: x.strip())
+    df["Middle"] = df["Middle"].apply(lambda x: x.strip())
+    df["Last"] = df["Last"].apply(lambda x: x.strip())
+    return df
+
+
+def make_first_middle_and_last_name_title_case(df):
+    # make the First, Middle, and Last columns title case
+    df["First"] = df["First"].apply(lambda x: x.title())
+    df["Middle"] = df["Middle"].apply(lambda x: x.title())
+    df["Last"] = df["Last"].apply(lambda x: x.title())
+    return df
+
+
 def combine_name_columns_and_add_space(df):
     # create name column and add a space between the Prefix, First, Middle, Last, and Suffix columns if they are not empty
     df["Name"] = (
@@ -293,6 +317,13 @@ def sort_by_name(df):
     return df
 
 
+# drop rows that have the same name and phone number
+def drop_rows_with_same_name_and_phone_number(df):
+    # drop rows with the same name and phone1 or phone2 or phone3
+    df = df.drop_duplicates(subset=["Name", "Phone1", "Phone2", "Phone3"], keep="first")
+    return df
+
+
 def export_to_excel(df):
     # export to speadsheet
     df.to_excel("contact-list.xlsx", index=False)
@@ -330,6 +361,9 @@ def main():
     df = remove_whitespace_from_phone_numbers(df)
     df = drop_rows_with_phone_numbers_that_are_less_than_10_digits(df)
     df = convert_none_values_in_name_columns_to_empty_string(df)
+    df = remove_emojis_from_name_columns(df)
+    df = remove_whitespace_from_the_front_and_back_of_name_columns(df)
+    df = make_first_middle_and_last_name_title_case(df)
     df = combine_name_columns_and_add_space(df)
     df = drop_unused_name_columns(df)
     df = turn_none_values_in_birthdays_column_to_empty_string(df)
@@ -342,7 +376,7 @@ def main():
     df = rename_birthday_column_to_dob(df)
     df = drop_rows_with_empty_string_in_name_column(df)
     df = sort_by_name(df)
-    print(df)
+    df = drop_rows_with_same_name_and_phone_number(df)
     export_to_excel(df)
     export_to_csv(df)
     close_connection_to_database(conn)
